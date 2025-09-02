@@ -1,0 +1,12 @@
+BasedOnStyle: Google
+
+ColumnLimit: 100
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+
+AlignOperands: true
+AlignConsecutiveAssignments: true
+AlignConsecutiveDeclarations: true
+
+InsertNewlineAtEOF: true
