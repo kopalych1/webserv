@@ -6,7 +6,7 @@
 #    By: akostian <akostian@student.s19.be>         +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/05/26 16:43:30 by akostian          #+#    #+#              #
-#    Updated: 2025/09/02 23:26:05 by akostian         ###   ########.fr        #
+#    Updated: 2025/09/06 06:36:38 by akostian         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -15,7 +15,8 @@ NAME				= webserv
 VPATH				= src
 
 SRC_DIR				= src
-SRCS				= main.cpp
+SRCS				= main.cpp \
+					  Response.cpp ResponseBuilder.cpp
 
 INC_DIR				= include
 INCLUDES			= -I$(INC_DIR)
