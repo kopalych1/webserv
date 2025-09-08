@@ -6,7 +6,7 @@
 /*   By: akostian <akostian@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/04 20:21:52 by akostian          #+#    #+#             */
-/*   Updated: 2025/09/06 06:51:30 by akostian         ###   ########.fr       */
+/*   Updated: 2025/09/08 05:55:38 by akostian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,21 @@ inline std::string currentTimeString() {
     return std::string(buf);
 }
 
-void prettyPrintRequest(char *buffer) {
+void prettyPrintResponse(const Response &res) {
+    const unsigned short code = res.getStatusCode();
+
+    if (code >= 200 && code < 300)
+        std::cout << colors::green;
+    else if (code >= 300 && code < 400)
+        std::cout << colors::yellow;
+    else if (code >= 400 && code < 500)
+        std::cout << colors::red;
+    else
+        std::cout << colors::magenta;
+    std::cout << code << colors::reset;
+}
+
+void logRequest(const char *buffer, const Response &res) {
     std::stringstream b_ss(buffer);
 
     std::string method_type;
@@ -51,23 +65,11 @@ void prettyPrintRequest(char *buffer) {
     else
         std::cout << colors::magenta;
 
-    std::cout << method_type << colors::reset << " ";
+    std::cout << method_type << " " << colors::cyan << request_path << colors::reset << " ";
 
-    std::cout << colors::cyan << request_path << colors::reset;
-}
+    prettyPrintResponse(res);
 
-void prettyPrintResponse(const Response &res) {
-    unsigned short code = res.getStatusCode();
-
-    if (code >= 200 && code < 300)
-        std::cout << colors::green;
-    else if (code >= 300 && code < 400)
-        std::cout << colors::yellow;
-    else if (code >= 400 && code < 500)
-        std::cout << colors::red;
-    else
-        std::cout << colors::magenta;
-    std::cout << code << colors::reset;
+    std::cout << "\n";
 }
 
 void initServer(ServerConfig &config) {
@@ -140,14 +142,9 @@ int main() {
         if (n < 1) continue;
         buffer[n] = '\0';
 
-        prettyPrintRequest(buffer);
-
         Response res = responseBuilder(config, buffer);
 
-        std::cout << " ";
-        prettyPrintResponse(res);
-
-        std::cout << "\n";
+        logRequest(buffer, res);
 
         if (write(client_fd, res) == -1) {
         };

@@ -6,7 +6,7 @@
 /*   By: akostian <akostian@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/04 20:21:55 by akostian          #+#    #+#             */
-/*   Updated: 2025/09/06 06:34:54 by akostian         ###   ########.fr       */
+/*   Updated: 2025/09/07 06:05:43 by akostian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,10 +16,16 @@
 
 #include "../include/webserv.hpp"
 
-// Check if dir exists
-inline bool isDirectory(const char *path) {
+// Check if file exists
+inline bool fileExists(const std::string &path) {
     struct stat info;
-    if (stat(path, &info) != 0) return false;  // No access or doesn't exist
+    return stat(path.c_str(), &info) == 0 && S_ISREG(info.st_mode);
+}
+
+// Check if dir exists
+inline bool dirExists(const std::string &path) {
+    struct stat info;
+    if (stat(path.c_str(), &info) != 0) return false;  // No access or doesn't exist
     return (info.st_mode & S_IFDIR) != 0;
 }
 
@@ -43,12 +49,15 @@ Response responseBuilder(ServerConfig &config, char *buffer) {
 
     std::string resposne_path = config.locations[0].root + request_path;
 
+    // If resposne_path is a directory, append default index
     if (*resposne_path.rbegin() == '/') resposne_path += config.locations[0].default_index;
 
     std::string body = readFileToString(resposne_path);
     if (!body.empty()) return Response(200, "OK", body);
+    if (fileExists(resposne_path)) return Response(200, "OK", "");  // Requested file is empty
 
-    // TODO: redirect if directory and no trailing slash (301)
+    if (dirExists(resposne_path + "/"))
+        return Response(301, "Moved Permanently", request_path + "/");
 
     return Response(404, "Not Found", "<html><body><h1>404 Not Found</h1></body></html>");
 }
