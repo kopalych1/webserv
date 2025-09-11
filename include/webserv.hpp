@@ -6,7 +6,7 @@
 /*   By: akostian <akostian@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/04 20:19:52 by akostian          #+#    #+#             */
-/*   Updated: 2025/09/04 20:28:13 by akostian         ###   ########.fr       */
+/*   Updated: 2025/09/09 17:25:32 by akostian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,6 +42,7 @@ struct ServerConfig {
     std::vector<Location>        locations;
 };
 
-Response responseBuilder(ServerConfig &config, char *buffer);
+Response    responseBuilder(ServerConfig &config, char *buffer);
+std::string DirectoryListing(const std::string &request_path, const std::string &resposne_path);
 
 #endif  // WEBSERV_HPP

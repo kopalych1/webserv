@@ -6,7 +6,7 @@
 /*   By: akostian <akostian@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/04 20:21:55 by akostian          #+#    #+#             */
-/*   Updated: 2025/09/07 06:05:43 by akostian         ###   ########.fr       */
+/*   Updated: 2025/09/09 17:24:35 by akostian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,15 +49,18 @@ Response responseBuilder(ServerConfig &config, char *buffer) {
 
     std::string resposne_path = config.locations[0].root + request_path;
 
+    if (*resposne_path.rbegin() != '/' && dirExists(resposne_path + "/"))
+        return Response(301, "Moved Permanently", request_path + "/");
+
+    if (config.locations[0].directory_listing && dirExists(resposne_path))
+        return Response(200, "OK", DirectoryListing(request_path, resposne_path));
+
     // If resposne_path is a directory, append default index
     if (*resposne_path.rbegin() == '/') resposne_path += config.locations[0].default_index;
 
     std::string body = readFileToString(resposne_path);
     if (!body.empty()) return Response(200, "OK", body);
     if (fileExists(resposne_path)) return Response(200, "OK", "");  // Requested file is empty
-
-    if (dirExists(resposne_path + "/"))
-        return Response(301, "Moved Permanently", request_path + "/");
 
     return Response(404, "Not Found", "<html><body><h1>404 Not Found</h1></body></html>");
 }
