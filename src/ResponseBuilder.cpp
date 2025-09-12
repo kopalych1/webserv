@@ -6,13 +6,14 @@
 /*   By: akostian <akostian@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/04 20:21:55 by akostian          #+#    #+#             */
-/*   Updated: 2025/09/09 17:24:35 by akostian         ###   ########.fr       */
+/*   Updated: 2025/09/12 03:21:07 by akostian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <sys/stat.h>
 
 #include <fstream>
+#include <sstream>
 
 #include "../include/webserv.hpp"
 
@@ -31,7 +32,7 @@ inline bool dirExists(const std::string &path) {
 
 // Helper function to read a file into a string
 inline std::string readFileToString(const std::string &path) {
-    std::ifstream      file(path.c_str());
+    std::ifstream      file(path.c_str(), std::ios::in | std::ios::binary);
     std::ostringstream ss;
     if (file) ss << file.rdbuf();
     return ss.str();
@@ -49,18 +50,25 @@ Response responseBuilder(ServerConfig &config, char *buffer) {
 
     std::string resposne_path = config.locations[0].root + request_path;
 
-    if (*resposne_path.rbegin() != '/' && dirExists(resposne_path + "/"))
-        return Response(301, "Moved Permanently", request_path + "/");
+    if (*resposne_path.rbegin() != '/' && dirExists(resposne_path + "/")) {
+        Response res(Http::Status::MovedPermanently, "");
+        res.setLocation(request_path + "/");
+        return res;
+    }
 
     if (config.locations[0].directory_listing && dirExists(resposne_path))
-        return Response(200, "OK", DirectoryListing(request_path, resposne_path));
+        return Response(Http::Status::OK, DirectoryListing(request_path, resposne_path),
+                        Http::ContentType::TEXT_HTML);
 
     // If resposne_path is a directory, append default index
     if (*resposne_path.rbegin() == '/') resposne_path += config.locations[0].default_index;
 
     std::string body = readFileToString(resposne_path);
-    if (!body.empty()) return Response(200, "OK", body);
-    if (fileExists(resposne_path)) return Response(200, "OK", "");  // Requested file is empty
+    if (!body.empty())
+        return Response(Http::Status::OK, body, Http::contentTypeFromFile(resposne_path));
+    if (fileExists(resposne_path))
+        return Response(Http::Status::OK, "");  // Requested file is empty
 
-    return Response(404, "Not Found", "<html><body><h1>404 Not Found</h1></body></html>");
+    return Response(Http::Status::NotFound, "<html><body><h1>404 Not Found</h1></body></html>",
+                    Http::ContentType::TEXT_HTML);
 }

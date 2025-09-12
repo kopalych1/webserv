@@ -6,7 +6,7 @@
 /*   By: akostian <akostian@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/04 20:21:52 by akostian          #+#    #+#             */
-/*   Updated: 2025/09/08 05:55:38 by akostian         ###   ########.fr       */
+/*   Updated: 2025/09/12 03:10:37 by akostian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,10 +73,10 @@ void logRequest(const char *buffer, const Response &res) {
 }
 
 void initServer(ServerConfig &config) {
-    std::set<methods> allowed_methods;
-    allowed_methods.insert(GET);
-    allowed_methods.insert(POST);
-    allowed_methods.insert(DELETE);
+    std::set<Http::Method::Type> allowed_methods;
+    allowed_methods.insert(Http::Method::GET);
+    allowed_methods.insert(Http::Method::POST);
+    allowed_methods.insert(Http::Method::DELETE);
 
     std::vector<std::string> cgi_types;
 
@@ -146,8 +146,8 @@ int main() {
 
         logRequest(buffer, res);
 
-        if (write(client_fd, res) == -1) {
-        };
+        Response::sendResponse(client_fd, res);
+
         close(client_fd);
     }
 

@@ -6,24 +6,40 @@
 /*   By: akostian <akostian@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/04 20:22:51 by akostian          #+#    #+#             */
-/*   Updated: 2025/09/06 06:33:09 by akostian         ###   ########.fr       */
+/*   Updated: 2025/09/12 03:19:39 by akostian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/Response.hpp"
 
-Response::Response() : status_code_(0), status_message_(""), body_("") {}
+#include <unistd.h>
 
-Response::Response(unsigned short status_code, std::string status_message, std::string body)
-    : status_code_(status_code), status_message_(status_message), body_(body) {}
+#include <sstream>
+
+Response::Response()
+    : status_code_(Http::Status::InternalServerError),
+      body_(""),
+      content_type_(Http::ContentType::OCTET_STREAM),
+      location_("") {}
+
+Response::Response(Http::Status::Code status_code, std::string body)
+    : status_code_(status_code),
+      body_(body),
+      content_type_(Http::ContentType::TEXT_HTML),
+      location_("") {}
+
+Response::Response(Http::Status::Code status_code, std::string body,
+                   Http::ContentType::Type content_type)
+    : status_code_(status_code), body_(body), content_type_(content_type), location_("") {}
 
 Response::Response(const Response& other) { this->operator=(other); }
 
 Response& Response::operator=(const Response& other) {
     if (this != &other) {
-        this->status_code_    = other.status_code_;
-        this->status_message_ = other.status_message_;
-        this->body_           = other.body_;
+        this->status_code_  = other.status_code_;
+        this->body_         = other.body_;
+        this->content_type_ = other.content_type_;
+        this->location_     = other.location_;
     }
     return *this;
 }
@@ -33,19 +49,21 @@ Response::~Response() {}
 std::string Response::toString() const {
     std::ostringstream response;
 
-    if (this->status_code_ == 0) return "";
+    if (this->status_code_ == Http::Status::InternalServerError) return "";
 
-    if (this->status_code_ == 301) {
-        response << "HTTP/1.1 " << this->status_code_ << " " << this->status_message_ << "\r\n";
-        response << "Location: " << this->body_ << "\r\n";  // body_ holds the redirect URL
+    if (this->status_code_ == Http::Status::MovedPermanently) {
+        response << "HTTP/1.1 " << this->status_code_ << " "
+                 << Http::reasonPhrase(this->status_code_) << "\r\n";
+        response << "Location: " << this->location_ << "\r\n";
         response << "Content-Length: 0\r\n";
         response << "Connection: close\r\n";
 
         return response.str();
     }
 
-    response << "HTTP/1.1 " << this->status_code_ << " " << this->status_message_ << "\r\n";
-    response << "Content-Type: text/html\r\n";
+    response << "HTTP/1.1 " << this->status_code_ << " " << Http::reasonPhrase(this->status_code_)
+             << "\r\n";
+    response << "Content-Type: " << Http::contentTypeToString(this->content_type_) << "\r\n";
     response << "Content-Length: " << this->body_.size() << "\r\n";
     response << "Connection: close\r\n";
     response << "\r\n";
@@ -54,7 +72,15 @@ std::string Response::toString() const {
     return response.str();
 }
 
-ssize_t write(int client_fd, Response res) {
-    std::string str = res.toString();
-    return write(client_fd, str.c_str(), str.size());
+ssize_t Response::sendResponse(int client_fd, const Response& res) {
+    ssize_t            totalSent = 0;
+    const std::string& data      = res.toString();
+    const ssize_t      dataSize  = data.size();
+
+    while (totalSent < dataSize) {
+        ssize_t sent = ::write(client_fd, data.c_str() + totalSent, dataSize - totalSent);
+        if (sent <= 0) return -1;
+        totalSent += sent;
+    }
+    return totalSent;
 }

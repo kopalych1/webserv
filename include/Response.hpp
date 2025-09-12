@@ -6,39 +6,44 @@
 /*   By: akostian <akostian@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/04 20:19:48 by akostian          #+#    #+#             */
-/*   Updated: 2025/09/06 06:38:38 by akostian         ###   ########.fr       */
+/*   Updated: 2025/09/12 03:17:25 by akostian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef RESPONSE_HPP
 #define RESPONSE_HPP
 
-#include <unistd.h>
+#include <sys/types.h>  // ssize_t
 
-#include <sstream>
 #include <string>
 
-class Response {
-   private:
-    unsigned short status_code_;
-    std::string    status_message_;
-    std::string    body_;
+#include "Http.hpp"
 
+class Response {
    public:
     Response();
-    Response(unsigned short status_code, std::string status_message, std::string body);
+    Response(Http::Status::Code status_code, std::string body);
+    Response(Http::Status::Code status_code, std::string body,
+             Http::ContentType::Type content_type);
     Response(const Response& other);
     Response& operator=(const Response& other);
     ~Response();
 
-    friend ssize_t write(int client_fd, Response res);
+    static ssize_t sendResponse(int client_fd, const Response& res);
 
     std::string toString() const;
 
-    void           setStatusCode(unsigned short code) { this->status_code_ = code; }
-    unsigned short getStatusCode() const { return this->status_code_; }
-    void           setStatusMessage(const std::string& message) { this->status_message_ = message; }
-    void           setBody(const std::string& body) { this->body_ = body; }
+    Http::Status::Code getStatusCode() const { return this->status_code_; }
+    void               setStatusCode(Http::Status::Code code) { this->status_code_ = code; }
+    void               setBody(const std::string& body) { this->body_ = body; }
+    void setContentType(const Http::ContentType::Type type) { this->content_type_ = type; }
+    void setLocation(const std::string& location) { this->location_ = location; }
+
+   private:
+    Http::Status::Code      status_code_;
+    std::string             body_;
+    Http::ContentType::Type content_type_;
+    std::string             location_;
 };
 
 #endif  // RESPONSE_HPP

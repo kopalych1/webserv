@@ -9,4 +9,6 @@ AlignOperands: true
 AlignConsecutiveAssignments: true
 AlignConsecutiveDeclarations: true
 
+AllowShortCaseLabelsOnASingleLine: true
+
 InsertNewlineAtEOF: true

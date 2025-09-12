@@ -6,7 +6,7 @@
 /*   By: akostian <akostian@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/04 20:19:52 by akostian          #+#    #+#             */
-/*   Updated: 2025/09/09 17:25:32 by akostian         ###   ########.fr       */
+/*   Updated: 2025/09/12 03:04:41 by akostian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,19 +18,19 @@
 #include <set>
 #include <vector>
 
+#include "Http.hpp"
 #include "Response.hpp"
 #include "colors.hpp"
-#include "methods.hpp"
 
 struct Location {
-    std::set<methods>        accepted_methods;
-    bool                     directory_listing;
-    std::string              root;
-    std::string              default_index;
-    std::string              upload_path;
-    unsigned short           redirect_code;
-    std::string              redirect_target;
-    std::vector<std::string> cgi_types;
+    std::set<Http::Method::Type> accepted_methods;
+    bool                         directory_listing;
+    std::string                  root;
+    std::string                  default_index;
+    std::string                  upload_path;
+    unsigned short               redirect_code;
+    std::string                  redirect_target;
+    std::vector<std::string>     cgi_types;
 };
 
 struct ServerConfig {

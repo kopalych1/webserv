@@ -6,17 +6,19 @@
 /*   By: akostian <akostian@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/08 07:26:09 by akostian          #+#    #+#             */
-/*   Updated: 2025/09/11 19:38:00 by akostian         ###   ########.fr       */
+/*   Updated: 2025/09/12 03:09:31 by akostian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <dirent.h>
-#include <strings.h>
 #include <sys/stat.h>
 
 #include <algorithm>  // std::sort
 #include <ctime>      // std::localtime, std::strftime
 #include <iomanip>    // std::setprecision
+#include <sstream>
+#include <string>
+#include <vector>
 
 #include "../include/webserv.hpp"
 
