@@ -6,7 +6,7 @@
 /*   By: akostian <akostian@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/04 20:22:51 by akostian          #+#    #+#             */
-/*   Updated: 2025/09/12 03:19:39 by akostian         ###   ########.fr       */
+/*   Updated: 2025/09/14 02:48:52 by akostian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,9 @@
 
 #include <unistd.h>
 
+#include <iostream>
 #include <sstream>
+#include <string>
 
 Response::Response()
     : status_code_(Http::Status::InternalServerError),
@@ -46,7 +48,7 @@ Response& Response::operator=(const Response& other) {
 
 Response::~Response() {}
 
-std::string Response::toString() const {
+std::string Response::headersToString() const {
     std::ostringstream response;
 
     if (this->status_code_ == Http::Status::InternalServerError) return "";
@@ -67,20 +69,22 @@ std::string Response::toString() const {
     response << "Content-Length: " << this->body_.size() << "\r\n";
     response << "Connection: close\r\n";
     response << "\r\n";
-    response << this->body_;
 
     return response.str();
 }
 
 ssize_t Response::sendResponse(int client_fd, const Response& res) {
+    const std::string& headers   = res.headersToString();
     ssize_t            totalSent = 0;
-    const std::string& data      = res.toString();
-    const ssize_t      dataSize  = data.size();
+    const ssize_t      bodySize  = res.body_.size();
+    const char*        body      = res.body_.data();
 
-    while (totalSent < dataSize) {
-        ssize_t sent = ::write(client_fd, data.c_str() + totalSent, dataSize - totalSent);
+    if (::write(client_fd, headers.c_str(), headers.size()) <= 0) return -1;
+
+    while (totalSent < bodySize) {
+        ssize_t sent = ::write(client_fd, body + totalSent, bodySize - totalSent);
         if (sent <= 0) return -1;
         totalSent += sent;
     }
-    return totalSent;
+    return totalSent + headers.size();
 }

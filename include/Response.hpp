@@ -6,7 +6,7 @@
 /*   By: akostian <akostian@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/04 20:19:48 by akostian          #+#    #+#             */
-/*   Updated: 2025/09/12 03:17:25 by akostian         ###   ########.fr       */
+/*   Updated: 2025/09/13 06:30:24 by akostian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,7 @@ class Response {
 
     static ssize_t sendResponse(int client_fd, const Response& res);
 
-    std::string toString() const;
+    std::string headersToString() const;
 
     Http::Status::Code getStatusCode() const { return this->status_code_; }
     void               setStatusCode(Http::Status::Code code) { this->status_code_ = code; }

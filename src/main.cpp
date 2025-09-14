@@ -6,7 +6,7 @@
 /*   By: akostian <akostian@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/04 20:21:52 by akostian          #+#    #+#             */
-/*   Updated: 2025/09/12 03:10:37 by akostian         ###   ########.fr       */
+/*   Updated: 2025/09/13 06:52:35 by akostian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -148,6 +148,7 @@ int main() {
 
         Response::sendResponse(client_fd, res);
 
+        shutdown(client_fd, SHUT_WR);
         close(client_fd);
     }
 
