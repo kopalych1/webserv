@@ -6,7 +6,7 @@
 /*   By: akostian <akostian@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/04 20:21:52 by akostian          #+#    #+#             */
-/*   Updated: 2025/09/13 06:52:35 by akostian         ###   ########.fr       */
+/*   Updated: 2025/09/17 10:12:00 by akostian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,6 +79,10 @@ void initServer(ServerConfig &config) {
     allowed_methods.insert(Http::Method::DELETE);
 
     std::vector<std::string> cgi_types;
+
+    config.error_pages_paths[Http::Status::Forbidden]           = "./www/error_pages/403.html";
+    config.error_pages_paths[Http::Status::NotFound]            = "./www/error_pages/404.html";
+    config.error_pages_paths[Http::Status::InternalServerError] = "./www/error_pages/500.html";
 
     // cgi_types.push_back("*.py");
     // cgi_types.push_back("*.php");

@@ -6,14 +6,16 @@
 /*   By: akostian <akostian@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/04 20:21:55 by akostian          #+#    #+#             */
-/*   Updated: 2025/09/12 03:21:07 by akostian         ###   ########.fr       */
+/*   Updated: 2025/09/17 10:19:18 by akostian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <sys/stat.h>
+#include <unistd.h>  // access
 
 #include <fstream>
 #include <sstream>
+#include <string>
 
 #include "../include/webserv.hpp"
 
@@ -38,6 +40,23 @@ inline std::string readFileToString(const std::string &path) {
     return ss.str();
 }
 
+std::string buildErrorPage(ServerConfig &config, Http::Status::Code code) {
+    if (config.error_pages_paths.find(code) != config.error_pages_paths.end()) {
+        const std::string error_page_path = config.error_pages_paths[code];
+        if (fileExists(error_page_path) && access(error_page_path.c_str(), R_OK))
+            return readFileToString(error_page_path);
+    }
+
+    std::ostringstream oss;
+
+    oss << "<html><head><title>" << code << " " << Http::reasonPhrase(code)
+        << "</title></head><body>";
+    oss << "<center><span style=\"color: red;\"><h1>" << code << " " << Http::reasonPhrase(code)
+        << "</h1></span></center>";
+
+    return oss.str();
+}
+
 Response responseBuilder(ServerConfig &config, char *buffer) {
     std::stringstream b_ss(buffer);
 
@@ -48,27 +67,39 @@ Response responseBuilder(ServerConfig &config, char *buffer) {
     std::string request_path;
     getline(b_ss, request_path, ' ');
 
-    std::string resposne_path = config.locations[0].root + request_path;
+    // TODO: Location selection (simple longest prefix match)
+    Location &location = config.locations[0];
 
-    if (*resposne_path.rbegin() != '/' && dirExists(resposne_path + "/")) {
+    std::string resposne_path = location.root + request_path;
+
+    if (*resposne_path.rbegin() != '/' && !fileExists(resposne_path) &&
+        dirExists(resposne_path + "/")) {
         Response res(Http::Status::MovedPermanently, "");
         res.setLocation(request_path + "/");
         return res;
     }
 
-    if (config.locations[0].directory_listing && dirExists(resposne_path))
-        return Response(Http::Status::OK, DirectoryListing(request_path, resposne_path),
+    if (dirExists(resposne_path)) {
+        if (location.directory_listing) {
+            if (access(resposne_path.c_str(), R_OK))
+                return Response(Http::Status::Forbidden,
+                                buildErrorPage(config, Http::Status::Forbidden),
+                                Http::ContentType::TEXT_HTML);
+
+            return Response(Http::Status::OK, DirectoryListing(request_path, resposne_path),
+                            Http::ContentType::TEXT_HTML);
+        }
+        resposne_path += location.default_index;
+    }
+
+    if (!fileExists(resposne_path))
+        return Response(Http::Status::NotFound, buildErrorPage(config, Http::Status::NotFound),
                         Http::ContentType::TEXT_HTML);
 
-    // If resposne_path is a directory, append default index
-    if (*resposne_path.rbegin() == '/') resposne_path += config.locations[0].default_index;
+    if (access(resposne_path.c_str(), R_OK))
+        return Response(Http::Status::Forbidden, buildErrorPage(config, Http::Status::Forbidden),
+                        Http::ContentType::TEXT_HTML);
 
-    std::string body = readFileToString(resposne_path);
-    if (!body.empty())
-        return Response(Http::Status::OK, body, Http::contentTypeFromFile(resposne_path));
-    if (fileExists(resposne_path))
-        return Response(Http::Status::OK, "");  // Requested file is empty
-
-    return Response(Http::Status::NotFound, "<html><body><h1>404 Not Found</h1></body></html>",
-                    Http::ContentType::TEXT_HTML);
+    return Response(Http::Status::OK, readFileToString(resposne_path),
+                    Http::contentTypeFromFile(resposne_path));
 }
