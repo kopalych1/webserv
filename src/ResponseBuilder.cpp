@@ -6,13 +6,14 @@
 /*   By: akostian <akostian@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/04 20:21:55 by akostian          #+#    #+#             */
-/*   Updated: 2025/09/17 10:19:18 by akostian         ###   ########.fr       */
+/*   Updated: 2025/09/18 20:29:55 by akostian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <sys/stat.h>
 #include <unistd.h>  // access
 
+#include <deque>
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -57,6 +58,41 @@ std::string buildErrorPage(ServerConfig &config, Http::Status::Code code) {
     return oss.str();
 }
 
+/**
+ * @brief Normalize a given path, resolving '.' and '..' components
+ *
+ * @param request_path input path to normalize
+ * @return std::string normalized path
+ */
+std::string normalizePath(const std::string &request_path) {
+    std::stringstream       ss(request_path);
+    std::string             item;
+    std::deque<std::string> parts;
+
+    // Split by '/' and add parts to deque
+    while (std::getline(ss, item, '/')) {
+        if (item.empty() || item == ".") continue;
+        if (item == "..") {
+            if (!parts.empty()) parts.pop_back();
+            continue;
+        }
+        parts.push_back(item);
+    }
+
+    std::stringstream normalized;
+    normalized << "/";
+
+    // Reconstruct normalized path
+    for (size_t i = 0; i < parts.size(); ++i) {
+        normalized << parts[i];
+        if (i + 1 < parts.size()) normalized << "/";
+    }
+
+    // Preserve trailing slash if present in original path (except for root)
+    if (*request_path.rbegin() == '/' && normalized.str() != "/") normalized << "/";
+    return normalized.str();
+}
+
 Response responseBuilder(ServerConfig &config, char *buffer) {
     std::stringstream b_ss(buffer);
 
@@ -66,6 +102,8 @@ Response responseBuilder(ServerConfig &config, char *buffer) {
 
     std::string request_path;
     getline(b_ss, request_path, ' ');
+
+    request_path = normalizePath(request_path);
 
     // TODO: Location selection (simple longest prefix match)
     Location &location = config.locations[0];
