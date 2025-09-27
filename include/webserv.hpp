@@ -6,7 +6,7 @@
 /*   By: akostian <akostian@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/04 20:19:52 by akostian          #+#    #+#             */
-/*   Updated: 2025/09/14 02:50:59 by akostian         ###   ########.fr       */
+/*   Updated: 2025/09/26 21:36:29 by akostian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,11 +25,10 @@
 struct Location {
     std::set<Http::Method::Type> accepted_methods;
     bool                         directory_listing;
-    std::string                  root;
+    std::string                  path;  // Url prefix
+    std::string                  root;  // Filesystem root
     std::string                  default_index;
     std::string                  upload_path;
-    unsigned short               redirect_code;
-    std::string                  redirect_target;
     std::vector<std::string>     cgi_types;
 };
 

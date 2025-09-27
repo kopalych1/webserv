@@ -6,7 +6,7 @@
 /*   By: akostian <akostian@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/04 20:21:55 by akostian          #+#    #+#             */
-/*   Updated: 2025/09/18 20:29:55 by akostian         ###   ########.fr       */
+/*   Updated: 2025/09/27 00:49:49 by akostian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -93,6 +93,49 @@ std::string normalizePath(const std::string &request_path) {
     return normalized.str();
 }
 
+/**
+ * @brief Joins two path components into a single path, handling slashes.
+ *
+ * @param root The first (root) part of the path.
+ * @param tail The second (tail) part of the path.
+ * @return std::string The combined path.
+ */
+std::string joinPaths(const std::string &root, const std::string &tail) {
+    if (root.empty()) return tail;
+    if (tail.empty()) return root;
+
+    std::cout << root << "\n";
+    std::cout << tail << "\n";
+
+    if (root[root.size() - 1] == '/' && tail[0] == '/')
+        return root + tail.substr(1);
+    else if (root[root.size() - 1] != '/' && tail[0] != '/')
+        return root + "/" + tail;
+    else
+        return root + tail;
+}
+
+// Returns a iterator to the selected location requested by request_path
+std::vector<Location>::iterator chooseLocation(std::vector<Location> &locations,
+                                               const std::string     &request_path,
+                                               std::size_t           &longest_prefix_len) {
+    std::vector<Location>::iterator longest_location = locations.end();
+
+    longest_prefix_len = 0;
+    for (std::vector<Location>::iterator it = locations.begin(); it != locations.end(); ++it) {
+        const std::string &path = (*it).path;
+
+        size_t j = 0;
+        while (j < path.size() && j < request_path.size() && (path[j] == request_path[j])) ++j;
+
+        if (j > longest_prefix_len && ((j + 1) >= path.size())) {
+            longest_prefix_len = j;
+            longest_location   = it;
+        }
+    }
+    return longest_location;
+}
+
 Response responseBuilder(ServerConfig &config, char *buffer) {
     std::stringstream b_ss(buffer);
 
@@ -105,12 +148,20 @@ Response responseBuilder(ServerConfig &config, char *buffer) {
 
     request_path = normalizePath(request_path);
 
-    // TODO: Location selection (simple longest prefix match)
-    Location &location = config.locations[0];
+    std::size_t                     longest_prefix;
+    std::vector<Location>::iterator location_it =
+        chooseLocation(config.locations, request_path, longest_prefix);
 
-    std::string resposne_path = location.root + request_path;
+    if (location_it == config.locations.end())
+        return Response(Http::Status::InternalServerError,
+                        buildErrorPage(config, Http::Status::InternalServerError),
+                        Http::ContentType::TEXT_HTML);
 
-    if (*resposne_path.rbegin() != '/' && !fileExists(resposne_path) &&
+    Location &location = *location_it;
+
+    std::string resposne_path = joinPaths(location.root, request_path.substr(longest_prefix));
+
+    if (*request_path.rbegin() != '/' && !fileExists(resposne_path) &&
         dirExists(resposne_path + "/")) {
         Response res(Http::Status::MovedPermanently, "");
         res.setLocation(request_path + "/");

@@ -6,7 +6,7 @@
 /*   By: akostian <akostian@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/04 20:21:52 by akostian          #+#    #+#             */
-/*   Updated: 2025/09/17 10:12:00 by akostian         ###   ########.fr       */
+/*   Updated: 2025/09/27 00:55:39 by akostian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -87,9 +87,12 @@ void initServer(ServerConfig &config) {
     // cgi_types.push_back("*.py");
     // cgi_types.push_back("*.php");
 
-    Location loc = {allowed_methods, false, "./www", "index.html", "./www", 0, "", cgi_types};
+    Location loc1 = {allowed_methods, true, "/", "./www/", "index.html", "./www/upload", cgi_types};
+    Location loc2 = {allowed_methods, true,           "/sub/images", "./www/alt/images/",
+                     "index.html",    "./www/upload", cgi_types};
 
-    config.locations.push_back(loc);
+    config.locations.push_back(loc1);
+    config.locations.push_back(loc2);
 }
 
 int main() {
