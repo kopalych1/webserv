@@ -6,7 +6,7 @@
 /*   By: akostian <akostian@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/04 20:21:55 by akostian          #+#    #+#             */
-/*   Updated: 2025/09/27 00:49:49 by akostian         ###   ########.fr       */
+/*   Updated: 2025/10/03 01:13:44 by akostian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -103,9 +103,6 @@ std::string normalizePath(const std::string &request_path) {
 std::string joinPaths(const std::string &root, const std::string &tail) {
     if (root.empty()) return tail;
     if (tail.empty()) return root;
-
-    std::cout << root << "\n";
-    std::cout << tail << "\n";
 
     if (root[root.size() - 1] == '/' && tail[0] == '/')
         return root + tail.substr(1);
