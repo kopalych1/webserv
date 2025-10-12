@@ -6,14 +6,13 @@
 /*   By: akostian <akostian@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/04 20:21:55 by akostian          #+#    #+#             */
-/*   Updated: 2025/10/03 01:13:44 by akostian         ###   ########.fr       */
+/*   Updated: 2025/10/12 11:07:00 by akostian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <sys/stat.h>
 #include <unistd.h>  // access
 
-#include <deque>
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -59,41 +58,6 @@ std::string buildErrorPage(ServerConfig &config, Http::Status::Code code) {
 }
 
 /**
- * @brief Normalize a given path, resolving '.' and '..' components
- *
- * @param request_path input path to normalize
- * @return std::string normalized path
- */
-std::string normalizePath(const std::string &request_path) {
-    std::stringstream       ss(request_path);
-    std::string             item;
-    std::deque<std::string> parts;
-
-    // Split by '/' and add parts to deque
-    while (std::getline(ss, item, '/')) {
-        if (item.empty() || item == ".") continue;
-        if (item == "..") {
-            if (!parts.empty()) parts.pop_back();
-            continue;
-        }
-        parts.push_back(item);
-    }
-
-    std::stringstream normalized;
-    normalized << "/";
-
-    // Reconstruct normalized path
-    for (size_t i = 0; i < parts.size(); ++i) {
-        normalized << parts[i];
-        if (i + 1 < parts.size()) normalized << "/";
-    }
-
-    // Preserve trailing slash if present in original path (except for root)
-    if (*request_path.rbegin() == '/' && normalized.str() != "/") normalized << "/";
-    return normalized.str();
-}
-
-/**
  * @brief Joins two path components into a single path, handling slashes.
  *
  * @param root The first (root) part of the path.
@@ -133,26 +97,19 @@ std::vector<Location>::iterator chooseLocation(std::vector<Location> &locations,
     return longest_location;
 }
 
-Response responseBuilder(ServerConfig &config, char *buffer) {
-    std::stringstream b_ss(buffer);
+HttpResponse responseBuilder(ServerConfig &config, HttpRequest &req) {
+    // req.setPath(normalizePath(req.getPath()));
 
-    std::string method_type;
-    getline(b_ss, method_type, ' ');
-    (void)method_type;
-
-    std::string request_path;
-    getline(b_ss, request_path, ' ');
-
-    request_path = normalizePath(request_path);
+    std::string request_path = req.getPath();
 
     std::size_t                     longest_prefix;
     std::vector<Location>::iterator location_it =
         chooseLocation(config.locations, request_path, longest_prefix);
 
     if (location_it == config.locations.end())
-        return Response(Http::Status::InternalServerError,
-                        buildErrorPage(config, Http::Status::InternalServerError),
-                        Http::ContentType::TEXT_HTML);
+        return HttpResponse(Http::Status::InternalServerError,
+                            buildErrorPage(config, Http::Status::InternalServerError),
+                            Http::ContentType::TEXT_HTML);
 
     Location &location = *location_it;
 
@@ -160,7 +117,7 @@ Response responseBuilder(ServerConfig &config, char *buffer) {
 
     if (*request_path.rbegin() != '/' && !fileExists(resposne_path) &&
         dirExists(resposne_path + "/")) {
-        Response res(Http::Status::MovedPermanently, "");
+        HttpResponse res(Http::Status::MovedPermanently, "");
         res.setLocation(request_path + "/");
         return res;
     }
@@ -168,24 +125,25 @@ Response responseBuilder(ServerConfig &config, char *buffer) {
     if (dirExists(resposne_path)) {
         if (location.directory_listing) {
             if (access(resposne_path.c_str(), R_OK))
-                return Response(Http::Status::Forbidden,
-                                buildErrorPage(config, Http::Status::Forbidden),
-                                Http::ContentType::TEXT_HTML);
+                return HttpResponse(Http::Status::Forbidden,
+                                    buildErrorPage(config, Http::Status::Forbidden),
+                                    Http::ContentType::TEXT_HTML);
 
-            return Response(Http::Status::OK, DirectoryListing(request_path, resposne_path),
-                            Http::ContentType::TEXT_HTML);
+            return HttpResponse(Http::Status::OK, DirectoryListing(request_path, resposne_path),
+                                Http::ContentType::TEXT_HTML);
         }
         resposne_path += location.default_index;
     }
 
     if (!fileExists(resposne_path))
-        return Response(Http::Status::NotFound, buildErrorPage(config, Http::Status::NotFound),
-                        Http::ContentType::TEXT_HTML);
+        return HttpResponse(Http::Status::NotFound, buildErrorPage(config, Http::Status::NotFound),
+                            Http::ContentType::TEXT_HTML);
 
     if (access(resposne_path.c_str(), R_OK))
-        return Response(Http::Status::Forbidden, buildErrorPage(config, Http::Status::Forbidden),
-                        Http::ContentType::TEXT_HTML);
+        return HttpResponse(Http::Status::Forbidden,
+                            buildErrorPage(config, Http::Status::Forbidden),
+                            Http::ContentType::TEXT_HTML);
 
-    return Response(Http::Status::OK, readFileToString(resposne_path),
-                    Http::contentTypeFromFile(resposne_path));
+    return HttpResponse(Http::Status::OK, readFileToString(resposne_path),
+                        Http::contentTypeFromFile(resposne_path));
 }

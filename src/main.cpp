@@ -6,7 +6,7 @@
 /*   By: akostian <akostian@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/04 20:21:52 by akostian          #+#    #+#             */
-/*   Updated: 2025/09/27 00:55:39 by akostian         ###   ########.fr       */
+/*   Updated: 2025/10/12 11:04:36 by akostian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,7 @@ inline std::string currentTimeString() {
     return std::string(buf);
 }
 
-void prettyPrintResponse(const Response &res) {
+void prettyPrintResponse(const HttpResponse &res) {
     const unsigned short code = res.getStatusCode();
 
     if (code >= 200 && code < 300)
@@ -45,7 +45,7 @@ void prettyPrintResponse(const Response &res) {
     std::cout << code << colors::reset;
 }
 
-void logRequest(const char *buffer, const Response &res) {
+void logRequest(const char *buffer, const HttpResponse &res) {
     std::stringstream b_ss(buffer);
 
     std::string method_type;
@@ -144,16 +144,19 @@ int main() {
             continue;
         }
 
-        char buffer[1024];
-        int  n = read(client_fd, buffer, sizeof(buffer));
+        char    buffer[(1 << 20)];  // TODO: fix reading the request from a user
+        ssize_t n = read(client_fd, buffer, sizeof(buffer));
         if (n < 1) continue;
         buffer[n] = '\0';
 
-        Response res = responseBuilder(config, buffer);
+        std::string raw(buffer, n);
+
+        HttpRequest  req = HttpRequestParser::parse(raw);
+        HttpResponse res = responseBuilder(config, req);
 
         logRequest(buffer, res);
 
-        Response::sendResponse(client_fd, res);
+        HttpResponse::sendResponse(client_fd, res);
 
         shutdown(client_fd, SHUT_WR);
         close(client_fd);

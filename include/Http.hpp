@@ -6,7 +6,7 @@
 /*   By: akostian <akostian@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 02:43:15 by akostian          #+#    #+#             */
-/*   Updated: 2025/09/12 03:02:39 by akostian         ###   ########.fr       */
+/*   Updated: 2025/10/11 00:27:39 by akostian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@ namespace Http {
 
 // HTTP methods
 struct Method {
-    enum Type { GET, POST, DELETE };
+    enum Type { GET, POST, DELETE, UNKNOWN };
 };
 
 // Status codes
@@ -69,6 +69,26 @@ inline const char* methodToString(const Http::Method::Type& m) {
         case Http::Method::DELETE: return "DELETE";
         default: return "UNKNOWN";
     }
+}
+
+/**
+ * @brief Convert string to Method enum
+ *
+ * @param str string value
+ * @return const Method enum representation of the method
+ */
+inline Http::Method::Type methodFromString(const std::string& str) {
+    std::string upper(str);
+
+    for (size_t i = 0; i < str.size(); i++) upper[i] = std::toupper(upper[i]);
+
+    if (upper == "GET")
+        return Http::Method::GET;
+    else if (upper == "POST")
+        return Http::Method::POST;
+    else if (upper == "DELETE")
+        return Http::Method::DELETE;
+    return Http::Method::UNKNOWN;
 }
 
 /**

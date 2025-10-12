@@ -6,7 +6,7 @@
 /*   By: akostian <akostian@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/04 20:19:52 by akostian          #+#    #+#             */
-/*   Updated: 2025/09/26 21:36:29 by akostian         ###   ########.fr       */
+/*   Updated: 2025/10/12 11:03:16 by akostian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,9 @@
 #include <vector>
 
 #include "Http.hpp"
-#include "Response.hpp"
+#include "HttpRequest.hpp"
+#include "HttpRequestParser.hpp"
+#include "HttpResponse.hpp"
 #include "colors.hpp"
 
 struct Location {
@@ -41,7 +43,7 @@ struct ServerConfig {
     std::vector<Location>                     locations;
 };
 
-Response    responseBuilder(ServerConfig &config, char *buffer);
-std::string DirectoryListing(const std::string &request_path, const std::string &resposne_path);
+HttpResponse responseBuilder(ServerConfig &config, HttpRequest &req);
+std::string  DirectoryListing(const std::string &request_path, const std::string &resposne_path);
 
 #endif  // WEBSERV_HPP
