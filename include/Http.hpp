@@ -6,7 +6,7 @@
 /*   By: akostian <akostian@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 02:43:15 by akostian          #+#    #+#             */
-/*   Updated: 2025/10/11 00:27:39 by akostian         ###   ########.fr       */
+/*   Updated: 2025/10/24 12:57:15 by akostian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,6 +34,7 @@ struct Status {
         Forbidden           = 403,
         NotFound            = 404,
         MethodNotAllowed    = 405,
+        Conflict            = 409,
         InternalServerError = 500,
         NotImplemented      = 501,
         BadGateway          = 502,
@@ -49,9 +50,11 @@ struct ContentType {
         TEXT_CSS,
         APPLICATION_JSON,
         APPLICATION_JAVASCRIPT,
+        VIDEO_MP4,
         IMAGE_PNG,
         IMAGE_JPEG,
         IMAGE_GIF,
+        IMAGE_ICON,
         OCTET_STREAM
     };
 };
@@ -109,6 +112,7 @@ inline const char* reasonPhrase(unsigned int code) {
         case 403: return "Forbidden";
         case 404: return "Not Found";
         case 405: return "Method Not Allowed";
+        case 409: return "Conflict";
         case 413: return "Payload Too Large";
         case 415: return "Unsupported Media Type";
         case 500: return "Internal Server Error";
@@ -136,8 +140,10 @@ inline Http::ContentType::Type contentTypeFromFile(const std::string& filename) 
     if (ext == ".css") return ContentType::TEXT_CSS;
     if (ext == ".json") return ContentType::APPLICATION_JSON;
     if (ext == ".js") return ContentType::APPLICATION_JAVASCRIPT;
+    if (ext == ".mp4") return ContentType::VIDEO_MP4;
     if (ext == ".png") return ContentType::IMAGE_PNG;
     if (ext == ".jpg" || ext == ".jpeg") return ContentType::IMAGE_JPEG;
+    if (ext == ".ico") return ContentType::IMAGE_ICON;
     if (ext == ".gif") return ContentType::IMAGE_GIF;
 
     return ContentType::OCTET_STREAM;
@@ -156,11 +162,35 @@ inline const char* contentTypeToString(ContentType::Type type) {
         case Http::ContentType::TEXT_CSS: return "text/css";
         case Http::ContentType::APPLICATION_JSON: return "application/json";
         case Http::ContentType::APPLICATION_JAVASCRIPT: return "application/javascript";
+        case Http::ContentType::VIDEO_MP4: return "video/mp4";
         case Http::ContentType::IMAGE_PNG: return "image/png";
         case Http::ContentType::IMAGE_JPEG: return "image/jpeg";
         case Http::ContentType::IMAGE_GIF: return "image/gif";
+        case Http::ContentType::IMAGE_ICON: return "image/x-icon";
         default: return "application/octet-stream";
     }
+}
+
+/**
+ * @brief Get ContentType enum from string
+ *
+ * @param str string representation of ContentType
+ * @return ContentType::Type enum value
+ */
+inline ContentType::Type contentTypeFromString(const std::string& str) {
+    if (str == "text/html") return Http::ContentType::TEXT_HTML;
+    if (str == "text/plain") return Http::ContentType::TEXT_PLAIN;
+    if (str == "text/css") return Http::ContentType::TEXT_CSS;
+    if (str == "application/json") return Http::ContentType::APPLICATION_JSON;
+    if (str == "application/javascript") return Http::ContentType::APPLICATION_JAVASCRIPT;
+    if (str == "video/mp4") return Http::ContentType::VIDEO_MP4;
+    if (str == "image/png") return Http::ContentType::IMAGE_PNG;
+    if (str == "image/jpeg" || str == "image/jpg") return Http::ContentType::IMAGE_JPEG;
+    if (str == "image/gif") return Http::ContentType::IMAGE_GIF;
+    if (str == "image/x-icon" || str == "image/vnd.microsoft.icon")
+        return Http::ContentType::IMAGE_ICON;
+
+    return Http::ContentType::OCTET_STREAM;
 }
 
 }  // namespace Http

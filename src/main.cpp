@@ -6,10 +6,11 @@
 /*   By: akostian <akostian@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/04 20:21:52 by akostian          #+#    #+#             */
-/*   Updated: 2025/10/12 11:04:36 by akostian         ###   ########.fr       */
+/*   Updated: 2025/10/20 05:34:01 by akostian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include <fcntl.h>
 #include <netinet/in.h>
 #include <unistd.h>
 
@@ -31,9 +32,22 @@ inline std::string currentTimeString() {
     return std::string(buf);
 }
 
-void prettyPrintResponse(const HttpResponse &res) {
-    const unsigned short code = res.getStatusCode();
+void logRequest(const HttpRequest &req, const HttpResponse &res) {
+    std::cout << "[" << colors::black << currentTimeString() << colors::reset << "] ";
 
+    if (req.getMethod() == Http::Method::GET)
+        std::cout << colors::green;
+    else if (req.getMethod() == Http::Method::POST)
+        std::cout << colors::yellow;
+    else if (req.getMethod() == Http::Method::DELETE)
+        std::cout << colors::red;
+    else
+        std::cout << colors::magenta;
+
+    std::cout << Http::methodToString(req.getMethod()) << " " << colors::cyan << req.getPath()
+              << colors::reset << " ";
+
+    const int code = res.getStatusCode();
     if (code >= 200 && code < 300)
         std::cout << colors::green;
     else if (code >= 300 && code < 400)
@@ -43,31 +57,6 @@ void prettyPrintResponse(const HttpResponse &res) {
     else
         std::cout << colors::magenta;
     std::cout << code << colors::reset;
-}
-
-void logRequest(const char *buffer, const HttpResponse &res) {
-    std::stringstream b_ss(buffer);
-
-    std::string method_type;
-    getline(b_ss, method_type, ' ');
-
-    std::string request_path;
-    getline(b_ss, request_path, ' ');
-
-    std::cout << "[" << colors::black << currentTimeString() << colors::reset << "] ";
-
-    if (method_type == "GET")
-        std::cout << colors::green;
-    else if (method_type == "POST")
-        std::cout << colors::yellow;
-    else if (method_type == "DELETE")
-        std::cout << colors::red;
-    else
-        std::cout << colors::magenta;
-
-    std::cout << method_type << " " << colors::cyan << request_path << colors::reset << " ";
-
-    prettyPrintResponse(res);
 
     std::cout << "\n";
 }
@@ -93,6 +82,23 @@ void initServer(ServerConfig &config) {
 
     config.locations.push_back(loc1);
     config.locations.push_back(loc2);
+}
+
+std::string readHttpRequest(int client_fd) {
+    // TODO: fix reading the request from a user
+
+    std::string request;
+    char        buffer[4096];
+
+    fcntl(client_fd, F_SETFL, O_NONBLOCK);
+    usleep(10000);  // Random 10ms delay
+
+    while (true) {
+        ssize_t bytesRead = read(client_fd, buffer, sizeof(buffer) - 1);
+        if (bytesRead <= 0) break;
+        request.append(buffer, bytesRead);
+    }
+    return request;
 }
 
 int main() {
@@ -144,17 +150,10 @@ int main() {
             continue;
         }
 
-        char    buffer[(1 << 20)];  // TODO: fix reading the request from a user
-        ssize_t n = read(client_fd, buffer, sizeof(buffer));
-        if (n < 1) continue;
-        buffer[n] = '\0';
-
-        std::string raw(buffer, n);
-
-        HttpRequest  req = HttpRequestParser::parse(raw);
+        HttpRequest  req = HttpRequestParser::parse(readHttpRequest(client_fd));
         HttpResponse res = responseBuilder(config, req);
 
-        logRequest(buffer, res);
+        logRequest(req, res);
 
         HttpResponse::sendResponse(client_fd, res);
 

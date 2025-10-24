@@ -6,7 +6,7 @@
 /*   By: akostian <akostian@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/04 20:21:55 by akostian          #+#    #+#             */
-/*   Updated: 2025/10/12 11:07:00 by akostian         ###   ########.fr       */
+/*   Updated: 2025/10/24 22:55:42 by akostian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 #include <sstream>
 #include <string>
 
+#include "../include/ParseFormData.hpp"
 #include "../include/webserv.hpp"
 
 // Check if file exists
@@ -97,9 +98,64 @@ std::vector<Location>::iterator chooseLocation(std::vector<Location> &locations,
     return longest_location;
 }
 
-HttpResponse responseBuilder(ServerConfig &config, HttpRequest &req) {
-    // req.setPath(normalizePath(req.getPath()));
+// Helper function that handles POST request
+// returns (true, HttpResponse) if request was bad
+static std::pair<bool, HttpResponse> handlePostUploads(ServerConfig   &config,
+                                                       const Location &location, HttpRequest &req,
+                                                       Http::Status::Code &successStatus) {
+    if (location.upload_path.empty()) {
+        // Forbidden(403) if upload not allowed
+        return std::make_pair(true, HttpResponse(Http::Status::Forbidden,
+                                                 buildErrorPage(config, Http::Status::Forbidden),
+                                                 Http::ContentType::TEXT_HTML));
+    }
 
+    FormData data = parseMultipartFormData(req);
+
+    // Checking files for same filenames first
+    // TODO: Upload file with randomly generated filename end
+    for (std::map<std::string, std::vector<UploadedFile> >::iterator it = data.files.begin();
+         it != data.files.end(); ++it) {
+        for (std::vector<UploadedFile>::iterator jt = it->second.begin(); jt != it->second.end();
+             ++jt) {
+            if (jt->filename.empty()) continue;
+
+            std::string filePath = joinPaths(location.upload_path, jt->filename);
+            if (fileExists(filePath))
+                return std::make_pair(true,
+                                      HttpResponse(Http::Status::Conflict,
+                                                   buildErrorPage(config, Http::Status::Conflict),
+                                                   Http::ContentType::TEXT_HTML));
+        }
+    }
+
+    // Saving files
+    for (std::map<std::string, std::vector<UploadedFile> >::iterator it = data.files.begin();
+         it != data.files.end(); ++it) {
+        for (std::vector<UploadedFile>::iterator jt = it->second.begin(); jt != it->second.end();
+             ++jt) {
+            if (jt->filename.empty()) continue;
+
+            std::string   filePath = joinPaths(location.upload_path, jt->filename);
+            std::ofstream outFile(filePath.c_str());
+            if (!outFile.is_open()) continue;
+
+            std::vector<unsigned char> &data = jt->data;
+
+            outFile.write(reinterpret_cast<const char *>(data.data()), data.size());
+            if (!outFile.is_open())
+                return std::make_pair(
+                    true, HttpResponse(Http::Status::InternalServerError,
+                                       buildErrorPage(config, Http::Status::InternalServerError),
+                                       Http::ContentType::TEXT_HTML));
+            outFile.close();
+        }
+    }
+    successStatus = Http::Status::Created;
+    return std::make_pair(false, HttpResponse());
+}
+
+HttpResponse responseBuilder(ServerConfig &config, HttpRequest &req) {
     std::string request_path = req.getPath();
 
     std::size_t                     longest_prefix;
@@ -111,10 +167,24 @@ HttpResponse responseBuilder(ServerConfig &config, HttpRequest &req) {
                             buildErrorPage(config, Http::Status::InternalServerError),
                             Http::ContentType::TEXT_HTML);
 
-    Location &location = *location_it;
-
+    Location   &location      = *location_it;
     std::string resposne_path = joinPaths(location.root, request_path.substr(longest_prefix));
 
+    if (location.accepted_methods.find(req.getMethod()) == location.accepted_methods.end())
+        return HttpResponse(Http::Status::MethodNotAllowed,
+                            buildErrorPage(config, Http::Status::MethodNotAllowed),
+                            Http::ContentType::TEXT_HTML);
+
+    Http::Status::Code successStatus = Http::Status::OK;
+
+    if (req.getMethod() == Http::Method::POST) {
+        std::pair<bool, HttpResponse> postRes =
+            handlePostUploads(config, location, req, successStatus);
+        if (postRes.first) return postRes.second;
+    }
+
+    // Returning MovedPermanently(301) if request ends with / and file doesn't exist
+    // Example:  /dir  ->  /dir/
     if (*request_path.rbegin() != '/' && !fileExists(resposne_path) &&
         dirExists(resposne_path + "/")) {
         HttpResponse res(Http::Status::MovedPermanently, "");
@@ -124,6 +194,7 @@ HttpResponse responseBuilder(ServerConfig &config, HttpRequest &req) {
 
     if (dirExists(resposne_path)) {
         if (location.directory_listing) {
+            // Directory Listing
             if (access(resposne_path.c_str(), R_OK))
                 return HttpResponse(Http::Status::Forbidden,
                                     buildErrorPage(config, Http::Status::Forbidden),
@@ -132,6 +203,7 @@ HttpResponse responseBuilder(ServerConfig &config, HttpRequest &req) {
             return HttpResponse(Http::Status::OK, DirectoryListing(request_path, resposne_path),
                                 Http::ContentType::TEXT_HTML);
         }
+        // Example:  /dir/  ->  /dir/index.html
         resposne_path += location.default_index;
     }
 
@@ -144,6 +216,6 @@ HttpResponse responseBuilder(ServerConfig &config, HttpRequest &req) {
                             buildErrorPage(config, Http::Status::Forbidden),
                             Http::ContentType::TEXT_HTML);
 
-    return HttpResponse(Http::Status::OK, readFileToString(resposne_path),
+    return HttpResponse(successStatus, readFileToString(resposne_path),
                         Http::contentTypeFromFile(resposne_path));
 }

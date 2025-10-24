@@ -6,7 +6,7 @@
 #    By: akostian <akostian@student.s19.be>         +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/05/26 16:43:30 by akostian          #+#    #+#              #
-#    Updated: 2025/10/12 11:02:55 by akostian         ###   ########.fr        #
+#    Updated: 2025/10/23 07:53:46 by akostian         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -17,6 +17,7 @@ VPATH				= src
 SRC_DIR				= src
 SRCS				= main.cpp \
 					  HttpPacket.cpp HttpRequest.cpp HttpResponse.cpp HttpRequestParser.cpp \
+					  ParseFormData.cpp \
 					  ResponseBuilder.cpp DirectoryListing.cpp
 
 INC_DIR				= include
