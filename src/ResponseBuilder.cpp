@@ -6,7 +6,7 @@
 /*   By: akostian <akostian@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/04 20:21:55 by akostian          #+#    #+#             */
-/*   Updated: 2025/10/24 22:55:42 by akostian         ###   ########.fr       */
+/*   Updated: 2025/10/24 22:57:31 by akostian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,7 +44,7 @@ inline std::string readFileToString(const std::string &path) {
 std::string buildErrorPage(ServerConfig &config, Http::Status::Code code) {
     if (config.error_pages_paths.find(code) != config.error_pages_paths.end()) {
         const std::string error_page_path = config.error_pages_paths[code];
-        if (fileExists(error_page_path) && access(error_page_path.c_str(), R_OK))
+        if (fileExists(error_page_path) && !access(error_page_path.c_str(), R_OK))
             return readFileToString(error_page_path);
     }
 
