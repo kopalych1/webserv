@@ -6,17 +6,17 @@
 /*   By: akostian <akostian@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/22 15:53:43 by akostian          #+#    #+#             */
-/*   Updated: 2025/10/24 12:55:12 by akostian         ###   ########.fr       */
+/*   Updated: 2025/10/29 13:58:14 by akostian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../include/ParseFormData.hpp"
+#include "ParseFormData.hpp"
 
 #include <map>
 #include <string>
 #include <vector>
 
-#include "../include/HttpRequest.hpp"
+#include "HttpRequest.hpp"
 
 static std::string extractBoundary(const std::string& contentType) {
     size_t pos = contentType.find("boundary=");

@@ -6,19 +6,19 @@
 /*   By: akostian <akostian@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/10 23:59:10 by akostian          #+#    #+#             */
-/*   Updated: 2025/10/12 11:06:38 by akostian         ###   ########.fr       */
+/*   Updated: 2025/10/29 13:56:45 by akostian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../include/HttpRequestParser.hpp"
+#include "HttpRequestParser.hpp"
 
 #include <cstdlib>  // atoi
 #include <deque>
 #include <sstream>
 
-#include "../include/Http.hpp"
-#include "../include/HttpPacket.hpp"
-#include "../include/HttpRequest.hpp"
+#include "Http.hpp"
+#include "HttpPacket.hpp"
+#include "HttpRequest.hpp"
 
 /**
  * @brief Normalize a given path, resolving '.' and '..' components

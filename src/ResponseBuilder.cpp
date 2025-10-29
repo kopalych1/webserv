@@ -6,7 +6,7 @@
 /*   By: akostian <akostian@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/04 20:21:55 by akostian          #+#    #+#             */
-/*   Updated: 2025/10/24 22:57:31 by akostian         ###   ########.fr       */
+/*   Updated: 2025/10/29 13:58:22 by akostian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,8 +17,8 @@
 #include <sstream>
 #include <string>
 
-#include "../include/ParseFormData.hpp"
-#include "../include/webserv.hpp"
+#include "ParseFormData.hpp"
+#include "webserv.hpp"
 
 // Check if file exists
 inline bool fileExists(const std::string &path) {

@@ -6,7 +6,7 @@
 /*   By: akostian <akostian@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/04 20:21:52 by akostian          #+#    #+#             */
-/*   Updated: 2025/10/20 05:34:01 by akostian         ###   ########.fr       */
+/*   Updated: 2025/10/29 13:58:07 by akostian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@
 #include <sstream>
 #include <string>
 
-#include "../include/webserv.hpp"
+#include "webserv.hpp"
 
 inline std::string currentTimeString() {
     std::time_t now = std::time(NULL);

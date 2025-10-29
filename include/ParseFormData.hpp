@@ -6,7 +6,7 @@
 /*   By: akostian <akostian@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/23 07:54:09 by akostian          #+#    #+#             */
-/*   Updated: 2025/10/23 08:26:23 by akostian         ###   ########.fr       */
+/*   Updated: 2025/10/29 13:58:32 by akostian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@
 #include <string>
 #include <vector>
 
-#include "../include/HttpRequest.hpp"
+#include "HttpRequest.hpp"
 
 struct UploadedFile {
     std::string                name;         // form field name

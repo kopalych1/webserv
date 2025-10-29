@@ -6,11 +6,11 @@
 /*   By: akostian <akostian@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/03 02:09:48 by akostian          #+#    #+#             */
-/*   Updated: 2025/10/12 11:21:31 by akostian         ###   ########.fr       */
+/*   Updated: 2025/10/29 13:56:14 by akostian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../include/HttpPacket.hpp"
+#include "HttpPacket.hpp"
 
 #include <map>
 #include <sstream>

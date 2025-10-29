@@ -6,7 +6,7 @@
 /*   By: akostian <akostian@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/08 07:26:09 by akostian          #+#    #+#             */
-/*   Updated: 2025/09/12 03:09:31 by akostian         ###   ########.fr       */
+/*   Updated: 2025/10/29 13:56:25 by akostian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@
 #include <string>
 #include <vector>
 
-#include "../include/webserv.hpp"
+#include "webserv.hpp"
 
 struct DirEntry {
     std::string name;

@@ -6,17 +6,17 @@
 /*   By: akostian <akostian@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/11 03:22:37 by akostian          #+#    #+#             */
-/*   Updated: 2025/10/12 09:51:04 by akostian         ###   ########.fr       */
+/*   Updated: 2025/10/29 13:57:59 by akostian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../include/HttpResponse.hpp"
+#include "HttpResponse.hpp"
 
 #include <unistd.h>
 
 #include <sstream>
 
-#include "../include/Http.hpp"
+#include "Http.hpp"
 
 HttpResponse::HttpResponse()
     : HttpPacket(),
